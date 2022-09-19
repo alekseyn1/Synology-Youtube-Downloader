@@ -13,7 +13,7 @@ Folder Temp
 Folder Output
 --PlaylistName
 ```
-The script downloads stream 140 from YouTube, converts mp4 to mp3 and places them into an Output folder. There is an option to add a sequential number to the file and mp3 title for older mp3 players (like mine)
+The script downloads [stream 140 from YouTube](https://github.com/alekseyn1/Synology-Youtube-Downloader/blob/main/youtube-stream-codes.md), converts mp4 to mp3 and places them into an Output folder. There is an option to add a sequential number to the file and mp3 title for older mp3 players (like mine)
 
 This python script is scheduled to run every midnight in my case with this command:
 ```python3 /volume2/Storage/Music/Youtube/youtube.py```
