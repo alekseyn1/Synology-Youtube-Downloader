@@ -18,7 +18,7 @@ The script downloads [stream 140 from YouTube](https://github.com/alekseyn1/Syno
 This python script is scheduled to run every midnight in my case with this command:
 ```python3 /volume2/Storage/Music/Youtube/youtube.py```
 
-You would need to adjust the path of course to your own.
+You would need to adjust the path of course to your own and CHANGE THE SETTIONS SECTION in the youtube.py to match your path as well
 
 I have also installed a free app for Synology called 'USB Copy'
 This app allows to create a task to assist with exporting data to your USB drive once it is plugged in.
