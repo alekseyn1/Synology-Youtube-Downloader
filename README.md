@@ -1,4 +1,4 @@
-# Synology Youtube Downloader
+# Synology Youtube Playlist Downloader
 Python download script to get mp3 from YouTube playlists
 
 Place this script on any volume / share on your Synology NAS
