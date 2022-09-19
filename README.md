@@ -1,7 +1,7 @@
 # Synology Youtube Playlist Downloader
 Python download script to get mp3 from YouTube playlists
 
-Place this script on any volume / share on your Synology NAS
+Place this script and ```playlists_to_download.txt``` into the same folder on any volume / share on your Synology NAS
 
 My car mp3 player only understands a certain mp3 bitrate so I had to come up with this script
 
@@ -13,7 +13,7 @@ Output
 --PlaylistName
 ```
 # What this script does:
-- Input for the script in in a text file ```playlists_to_download.txt``` that contains links to YouTube playlists. One per line.
+- Input for the script is in a text file ```playlists_to_download.txt``` that contains links to YouTube playlists. One per line.
 - Downloads [stream 140 from YouTube](https://github.com/alekseyn1/Synology-Youtube-Downloader/blob/main/youtube-stream-codes.md), 
 - Converts mp4 to mp3 and places them into an Output folder. 
 - Grabs a thumbnail from the YouTube video and writes it as cover art into every mp3 file.
