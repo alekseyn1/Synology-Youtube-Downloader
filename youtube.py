@@ -26,22 +26,24 @@ import urllib.request #for retrieving URLs from playlists
 import eyed3 #for manipulating id3 tags in mp3 files
 from eyed3.id3.frames import ImageFrame  
 
-
+import time
 #================= functions have to be defined first =================
 
 #Function to sanitise strings
 def sanitize_me(old_name):
-    x = re.search(r"[^- A-Za-z0-9.]+", old_name)
+    x = re.search(r"[^А-Яа-яЁёA-Za-z0-9 .\(\)-]+", old_name)
     if x:
-        #print('String for cleanup: ' + old_name)
-        clean_name = re.sub(r"[^А-Яа-яЁёA-Za-z0-9 .-]+","",old_name)
-        #print('first cleanup: ' + clean_name)
-        
+        clean_name = re.sub(r"[^А-Яа-яЁёA-Za-z0-9 .\(\)-]+","",old_name)
+
         #not required as REGEX takes care of this
         # return_name = ' '.join(clean_name.split())
         # print('second cleanup: ' + return_name)    
-        
-        return clean_name
+        print('Clean Name: ' + clean_name)
+        #return clean_name[0:50].strip()
+        return clean_name.strip()
+    else:
+        return old_name.strip()
+    
 
 #Function to check if the folder exists and create it if it does not
 def check_folder(path):
@@ -71,19 +73,25 @@ USE_SEQ_NUM = True
 
 #Modify the value to download a different stream
 YOUTUBE_STREAM_AUDIO = '140'
-#================= End of Settings ================================
 
 OUTPUT_FLD = os.path.join(PARENT_DIR,OUTPUT_DIR)
 check_folder(OUTPUT_FLD)   
 
-#Open the playlist file
+TEMP_DIR = os.path.join(PARENT_DIR,'Temp')
+check_folder(TEMP_DIR)
 
+#================= End of Settings ================================
+
+
+    
+#Open the playlist file
 playlists_file = open(PLAYLISTS_PATH, 'r')
 pcount = 0
-
+print("==============================================================")
 #Iterate lines in the playlist file. Indentation in the code is important
 while True:
     pcount += 1
+    
     # Get next line from file
     line = playlists_file.readline()
     # if line is empty - end of file is reached
@@ -97,44 +105,61 @@ while True:
     playlist = Playlist(line.strip())
     playlist_title = playlist.title
     print("Playlist title: " + playlist_title)
-        
+    print("")        
     # this fixes the empty playlist.videos list
     playlist._video_regex = re.compile(r"\"url\":\"(/watch\?v=[\w-]*)")
 
+    #settings for each playlist
+    DOWNLOAD_DIR = os.path.join(TEMP_DIR,playlist_title+' mp4 files')
+    check_folder(DOWNLOAD_DIR)    
+
+    SAVE_DIR = os.path.join(OUTPUT_FLD,playlist_title)
+    check_folder(SAVE_DIR)
+
+    THUMBS_DIR = os.path.join(DOWNLOAD_DIR,'Art')
+    check_folder(THUMBS_DIR)
+    
+    
     #print(len(playlist.video_urls))
     #for url in playlist.video_urls:
     #    print(url)
     
     #input("Press Enter to continue...")
 
-    TEMP_DIR = os.path.join(PARENT_DIR,'Temp')
-    check_folder(TEMP_DIR)
-
-    DOWNLOAD_DIR = os.path.join(TEMP_DIR,playlist_title+' mp4 files')
-    check_folder(DOWNLOAD_DIR)    
-    
-    THUMBS_DIR = os.path.join(DOWNLOAD_DIR,'Art')
-    check_folder(THUMBS_DIR)
-    
-    SAVE_DIR = os.path.join(OUTPUT_FLD,playlist_title)
-    check_folder(SAVE_DIR)
-
     # physically downloading the audio track
-    count = 1
-    for video in playlist.videos:
-        print('=====> (' + str(count) + '/' + str(len(playlist)) + ') Downloading Title: '+video.title)
-        count += 1        
-        #pytube will not download the file if it exists. To make is faster, you can use the block below
-        if os.path.exists(os.path.join(DOWNLOAD_DIR,str(video.title+'.mp4'))):
-            print('MP4 File Exists')
-            continue
-            
-        try: 
-          audioStream = video.streams.get_by_itag(YOUTUBE_STREAM_AUDIO)
-          audioStream.download(output_path=DOWNLOAD_DIR)
-          #get thumbnail
-          urllib.request.urlretrieve(video.thumbnail_url, os.path.join(THUMBS_DIR,sanitize_me(str(video.title))+'.jpg'))
+    count = 0
 
+    list_of_videos = []
+    for video in playlist.videos:
+        count += 1
+
+        #YouTube seems to throttle downloads. Trying to delay the download once in 5 tracks
+        if count % 5 == 0 and count != 1:
+            print('')
+            print('*****Pausing after 5 downloads')
+            print('')
+            time.sleep(10) # Sleep for 10 seconds
+            
+        print('=====> (' + str(count) + '/' + str(len(playlist)) + ') Downloading Title: '+video.title)
+        clean_name = sanitize_me(video.title)
+        list_of_videos.append(clean_name)
+
+        #pytube will not download the file if it exists. To make is faster, you can use the block below
+        if os.path.exists(os.path.join(DOWNLOAD_DIR,str(clean_name+'.mp4'))):
+            print('MP4 File Exists' + os.path.join(DOWNLOAD_DIR,str(clean_name+'.mp4')))
+            continue
+  
+        try: 
+            audioStream = video.streams.get_by_itag(YOUTUBE_STREAM_AUDIO)
+            audioFile = audioStream.download(output_path=DOWNLOAD_DIR,filename=str(clean_name+'.mp4'))
+            print("DOWNLOADED -  "+ os.path.splitext(os.path.basename(audioFile))[0])
+              
+              #list_of_videos.append(os.path.splitext(os.path.basename(audioFile))[0])
+
+              #get thumbnail
+            urllib.request.urlretrieve(video.thumbnail_url, os.path.join(THUMBS_DIR,(str(clean_name))+'.jpg'))
+              #print(video.thumbnail_url)
+            print("")
         except:
              print("error "+str(IOError))
              pass
@@ -147,6 +172,9 @@ while True:
     files = sorted( files, key = lambda x: os.path.getmtime(os.path.join(DOWNLOAD_DIR, x)) )
 
     #Converting files to mp3
+    # print("==============================================================")
+    # #print("")
+    # print(list_of_videos)
     print("")
     print("==============================================================")
     print("Starting the mp4 to mp3 conversions")
@@ -154,40 +182,43 @@ while True:
     
     count2 = 1
     for file in files:
-
         if re.search('mp4', file):
-            
             mp4_path = os.path.join(DOWNLOAD_DIR,file)
             print('')
-            #print('Processing: '+mp4_path)
-            print('=====> (' + str(count2) + '/' + str(len(os.listdir(DOWNLOAD_DIR))) + ') Converting Title: '+file)
+            print('=====> (' + str(count2) + '/' + str(len(os.listdir(DOWNLOAD_DIR))-1) + ') Converting Title: '+file)
 
             try:     
-                file = sanitize_me(os.path.splitext(file)[0])
-                
                 if (USE_SEQ_NUM):
                   prefix = str(count2).zfill(3) + ' - '
                 else:
                   prefix = ''
                 
+                count2 += 1
                 
                 mp3_path = os.path.join(SAVE_DIR,str(prefix + os.path.splitext(file)[0]+'.mp3'))
-                count2 += 1
-
-                #print(mp3_path)
+                
+                print('MP3 File path')
+                print(mp3_path)
                 #print(os.path.exists(mp3_path))
                 #print(mp4_path)
                 #print(os.path.exists(mp4_path))
 
+                if os.path.splitext(file)[0] not in list_of_videos:
+                  print(os.path.splitext(file)[0] + ' - file is NOT this playlist')
+                  os.remove(mp3_path)
+                  continue
                 if os.path.exists(mp3_path):
                   print('MP3 File Exists')
                   continue
 
                 new_file = AudioFileClip(mp4_path)
+                
+                print('Writing MP3 File')
                 new_file.write_audiofile(mp3_path)
                 
                 #set mp3 cover art
                 audiofile = eyed3.load(mp3_path)
+                
                 if (audiofile.tag == None):
                     audiofile.initTag()
                 audiofile.tag.images.set(ImageFrame.FRONT_COVER, open(os.path.join(THUMBS_DIR,str(os.path.splitext(file)[0]+'.jpg')),'rb').read(), 'image/jpeg')
@@ -200,13 +231,15 @@ while True:
                 
                 #older tag standard below
                 #audio.tag.save(version=eyed3.id3.ID3_V2_3)
+
                 audiofile.tag.save()
-                #os.remove(mp4_path)
+                
             except:
                 print("error "+str(IOError))
                 pass
                 continue
-    #end WHILE loop
+        
+        #end WHILE loop
     
 
 playlists_file.close()
