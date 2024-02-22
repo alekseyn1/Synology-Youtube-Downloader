@@ -27,6 +27,8 @@ import eyed3 #for manipulating id3 tags in mp3 files
 from eyed3.id3.frames import ImageFrame  
 
 import time
+
+
 #================= functions have to be defined first =================
 
 #Function to sanitise strings
@@ -34,10 +36,6 @@ def sanitize_me(old_name):
     x = re.search(r"[^А-Яа-яЁёA-Za-z0-9 .\(\)-]+", old_name)
     if x:
         clean_name = re.sub(r"[^А-Яа-яЁёA-Za-z0-9 .\(\)-]+","",old_name)
-
-        #not required as REGEX takes care of this
-        # return_name = ' '.join(clean_name.split())
-        # print('second cleanup: ' + return_name)    
         print('Clean Name: ' + clean_name)
         #return clean_name[0:50].strip()
         return clean_name.strip()
@@ -119,7 +117,6 @@ while True:
     THUMBS_DIR = os.path.join(DOWNLOAD_DIR,'Art')
     check_folder(THUMBS_DIR)
     
-    
     #print(len(playlist.video_urls))
     #for url in playlist.video_urls:
     #    print(url)
@@ -132,11 +129,10 @@ while True:
     list_of_videos = []
     for video in playlist.videos:
         count += 1
-
         #YouTube seems to throttle downloads. Trying to delay the download once in 5 tracks
-        if count % 5 == 0 and count != 1:
+        if count % 10 == 0 and count != 1:
             print('')
-            print('*****Pausing after 5 downloads')
+            print('********************Pausing after 10 downloads for 10 seconds')
             print('')
             time.sleep(10) # Sleep for 10 seconds
             
@@ -146,24 +142,24 @@ while True:
 
         #pytube will not download the file if it exists. To make is faster, you can use the block below
         if os.path.exists(os.path.join(DOWNLOAD_DIR,str(clean_name+'.mp4'))):
-            print('MP4 File Exists' + os.path.join(DOWNLOAD_DIR,str(clean_name+'.mp4')))
+            print('MP4 File Exists. Skipping: ' + os.path.join(DOWNLOAD_DIR,str(clean_name+'.mp4')))
             continue
-  
         try: 
             audioStream = video.streams.get_by_itag(YOUTUBE_STREAM_AUDIO)
             audioFile = audioStream.download(output_path=DOWNLOAD_DIR,filename=str(clean_name+'.mp4'))
             print("DOWNLOADED -  "+ os.path.splitext(os.path.basename(audioFile))[0])
-              
-              #list_of_videos.append(os.path.splitext(os.path.basename(audioFile))[0])
-
-              #get thumbnail
+			
+            #list_of_videos.append(os.path.splitext(os.path.basename(audioFile))[0])
+            
+            #get thumbnail
             urllib.request.urlretrieve(video.thumbnail_url, os.path.join(THUMBS_DIR,(str(clean_name))+'.jpg'))
-              #print(video.thumbnail_url)
+            #print(video.thumbnail_url)
             print("")
-        except:
-             print("error "+str(IOError))
-             pass
-             continue
+        except Exception as error:
+            print("=!=!=!=!=> An exception occurred:", type(error).__name__, "–", error)
+            print('')
+            pass
+            continue
 
     #get a list of files
     files = filter( lambda x: os.path.isfile(os.path.join(DOWNLOAD_DIR, x)), os.listdir(DOWNLOAD_DIR) )
@@ -185,7 +181,7 @@ while True:
         if re.search('mp4', file):
             mp4_path = os.path.join(DOWNLOAD_DIR,file)
             print('')
-            print('=====> (' + str(count2) + '/' + str(len(os.listdir(DOWNLOAD_DIR))-1) + ') Converting Title: '+file)
+            print('=====> (' + str(count2) + '/' + str(len(os.listdir(DOWNLOAD_DIR))-1) + ') Converting Title: '+ file)
 
             try:     
                 if (USE_SEQ_NUM):
@@ -197,18 +193,18 @@ while True:
                 
                 mp3_path = os.path.join(SAVE_DIR,str(prefix + os.path.splitext(file)[0]+'.mp3'))
                 
-                print('MP3 File path')
-                print(mp3_path)
+                print('MP3 File path: ' + mp3_path )
                 #print(os.path.exists(mp3_path))
                 #print(mp4_path)
                 #print(os.path.exists(mp4_path))
 
                 if os.path.splitext(file)[0] not in list_of_videos:
-                  print(os.path.splitext(file)[0] + ' - file is NOT this playlist')
+                  print('File is NOT this playlist: ' + os.path.splitext(file)[0])
+                  print('Deleting: ' + mp3_path)
                   os.remove(mp3_path)
                   continue
                 if os.path.exists(mp3_path):
-                  print('MP3 File Exists')
+                  print('MP3 File Exists - skipping')
                   continue
 
                 new_file = AudioFileClip(mp4_path)
@@ -234,8 +230,9 @@ while True:
 
                 audiofile.tag.save()
                 
-            except:
-                print("error "+str(IOError))
+            except Exception as error:
+                print("=!=!=!=!=> An exception occurred:", type(error).__name__, "–", error)
+                print('')
                 pass
                 continue
         
