@@ -21,6 +21,8 @@ Output
 
 This python script is scheduled to run every midnight in my case with this command:
 ```python3 /volume2/Storage/Music/Youtube/youtube.py```
+updated Feb 2024 for python 3.8 as the new DS has python built in. now using download.sh script for the schedule
+'''bash download.sh'''
 
 You would need to adjust the path of course to your own and CHANGE THE SETTIONS SECTION in the youtube.py to match your path as well
 
