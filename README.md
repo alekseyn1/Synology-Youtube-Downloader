@@ -19,17 +19,18 @@ Output
 - Grabs a thumbnail from the YouTube video and writes it as cover art into every mp3 file.
 - Optionally (default) adds a sequential number to the file and mp3 title for older mp3 players (like mine)
 
-This python script is scheduled to run every midnight in my case with this command:
+This Python script is scheduled to run every midnight in my case with this command:
 ```python3 /volume2/Storage/Music/Youtube/youtube.py```
-updated Feb 2024 for python 3.8 as the new DS has python built in. now using download.sh script for the schedule
-'''bash download.sh'''
 
-You would need to adjust the path of course to your own and CHANGE THE SETTIONS SECTION in the youtube.py to match your path as well
+Updated in Feb 2024 for Python 3.8 as the new DS has Python built in. now using download.sh script for the schedule
+```bash download.sh```
+
+You would need to adjust the path of course to your own and CHANGE THE SETTINGS SECTION in the youtube.py to match your path as well
 
 I have also installed a free app for Synology called 'USB Copy'
 This app allows to create a task to assist with exporting data to your USB drive once it is plugged in.
 
-So once the USB disk is plugged into synology, a full copy from the 'Output' folder will be copied to the USB drive automatically. All I need to do is wait for Synology to beep at me twice: once the copy is started and another time when it's finished and the USB is ejected.
+So once the USB disk is plugged into Synology, a full copy from the 'Output' folder will be copied to the USB drive automatically. All I need to do is wait for Synology to beep at me twice: once the copy is started and another time when it's finished and the USB is ejected.
 
 This script is based on samples/projects related to pytube module, so if you see some of your code, please let me know and I'll credit your work.
 
